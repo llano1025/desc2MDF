@@ -6,6 +6,7 @@ import numpy as np
 from tqdm import tqdm
 from utils.metrics import BertMetrics
 import torch.nn.functional as F
+import pandas as pd
 
 
 class BertClassifier:
@@ -18,7 +19,7 @@ class BertClassifier:
         self.model = BertForSequenceClassification.from_pretrained(model_name, num_labels=self.num_label)
         self.model = self.model.to(self.device)
         self.optimizer = AdamW(self.model.parameters(), lr=1e-5, eps=1e-8)
-        self.epochs = 5
+        self.epochs = 50
         self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
                                                          num_warmup_steps=0,
                                                          num_training_steps=len(data.dataloader_train) * self.epochs)
@@ -60,7 +61,7 @@ class BertClassifier:
 
         return loss_val_avg, predictions, true_vals
 
-    def _predict(self, dataloader_predict):
+    def _predict(self, dataloader_predict, predict_ids):
         model = BertForSequenceClassification.from_pretrained("bert-base-uncased",
                                                               num_labels=self.num_label,
                                                               output_attentions=False,
@@ -76,7 +77,7 @@ class BertClassifier:
         # for i, inputs in enumerate(input_ids):
             # inputs = inputs.to(self.device)
             inputs = {'input_ids': batch[0].to(self.device),
-                      'attention_mask': None,
+                      'attention_mask': batch[1].to(self.device),
                       'labels': None
                       }
 
@@ -98,7 +99,11 @@ class BertClassifier:
         for i, index in enumerate(predicted_class_index):
             predictions_key.append(key[index])
 
-        return predictions_key
+        df = pd.DataFrame(predict_ids)
+        df.columns = ["DESC"]
+        df['RECD'] = predictions_key
+        df.to_excel(f"exc/outputs/{self.model_type}_output.xlsx")
+        return df
 
     def _train(self, dataloader_train, dataloader_validation):
         for epoch in tqdm(range(1, self.epochs + 1)):
