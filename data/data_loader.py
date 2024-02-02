@@ -34,7 +34,7 @@ class Dataloader_Desc2MDF:
                                                            add_special_tokens=True,
                                                            return_attention_mask=True,
                                                            pad_to_max_length=True,
-                                                           max_length=256,
+                                                           max_length=64,
                                                            return_tensors='pt')
 
         input_ids_train = train_encodings['input_ids']
@@ -45,7 +45,7 @@ class Dataloader_Desc2MDF:
                                                           add_special_tokens=True,
                                                           return_attention_mask=True,
                                                           pad_to_max_length=True,
-                                                          max_length=256,
+                                                          max_length=64,
                                                           return_tensors='pt')
 
         input_ids_test = test_encodings['input_ids']
@@ -61,13 +61,20 @@ class Dataloader_Desc2MDF:
         # Read excel / read dataframe
         df = pd.read_excel(file_path)
         X = df['desc'].tolist()
-        train_encodings = self.tokenizer.batch_encode_plus(X,
-                                                           pad_to_max_length=True,
-                                                           max_length=256,
-                                                           return_tensors='pt')
+        predict_encodings = self.tokenizer.batch_encode_plus(X,
+                                                             return_attention_mask=True,
+                                                             pad_to_max_length=True,
+                                                             max_length=64,
+                                                             return_tensors='pt')
 
-        input_ids = train_encodings['input_ids']
-        return TensorDataset(input_ids)
+        input_ids = predict_encodings['input_ids']
+        attention_masks = predict_encodings['attention_mask']
+        dataset_predict = TensorDataset(input_ids, attention_masks)
+
+        dataloader_predict = DataLoader(dataset_predict,
+                                        sampler=SequentialSampler(dataset_predict),
+                                        batch_size=self.batch_size)
+        return dataloader_predict, X
 
     def batch_data(self):
         # Prepare batch data
@@ -109,7 +116,7 @@ class Dataloader_MDF2Rec:
                                                            add_special_tokens=True,
                                                            return_attention_mask=True,
                                                            pad_to_max_length=True,
-                                                           max_length=256,
+                                                           max_length=64,
                                                            return_tensors='pt')
 
         input_ids_train = train_encodings['input_ids']
@@ -120,7 +127,7 @@ class Dataloader_MDF2Rec:
                                                           add_special_tokens=True,
                                                           return_attention_mask=True,
                                                           pad_to_max_length=True,
-                                                          max_length=256,
+                                                          max_length=64,
                                                           return_tensors='pt')
 
         input_ids_test = test_encodings['input_ids']
@@ -132,6 +139,25 @@ class Dataloader_MDF2Rec:
 
         return dataset_train, dataset_val, label_dict, len(possible_labels)
 
+    def predict_data(self, file_path):
+        # Read excel / read dataframe
+        df = pd.read_excel(file_path)
+        X = df['desc'].tolist()
+        predict_encodings = self.tokenizer.batch_encode_plus(X,
+                                                             return_attention_mask=True,
+                                                             pad_to_max_length=True,
+                                                             max_length=64,
+                                                             return_tensors='pt')
+
+        input_ids = predict_encodings['input_ids']
+        attention_masks = predict_encodings['attention_mask']
+        dataset_predict = TensorDataset(input_ids, attention_masks)
+
+        dataloader_predict = DataLoader(dataset_predict,
+                                        sampler=SequentialSampler(dataset_predict),
+                                        batch_size=self.batch_size)
+        return dataloader_predict, X
+
     def batch_data(self):
         # Prepare batch data
         dataloader_train = DataLoader(self.dataset_train,
@@ -141,3 +167,5 @@ class Dataloader_MDF2Rec:
                                            sampler=SequentialSampler(self.dataset_val),
                                            batch_size=self.batch_size)
         return dataloader_train, dataloader_validation
+
+
