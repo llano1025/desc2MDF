@@ -38,7 +38,7 @@ class BertClassifier:
 
             inputs = {'input_ids': batch[0].to(self.device),
                       'attention_mask': batch[1].to(self.device),
-                      'labels': batch[2].to(self.device),
+                      'labels': batch[2].to(self.device)
                       }
 
             with torch.no_grad():
@@ -60,7 +60,7 @@ class BertClassifier:
 
         return loss_val_avg, predictions, true_vals
 
-    def _predict(self, input_ids):
+    def _predict(self, dataloader_predict):
         model = BertForSequenceClassification.from_pretrained("bert-base-uncased",
                                                               num_labels=self.num_label,
                                                               output_attentions=False,
@@ -71,20 +71,34 @@ class BertClassifier:
         self.model.eval()
         predictions = []
 
-        for i, inputs in enumerate(input_ids):
-            inputs = inputs.to(self.device)
+        for batch in dataloader_predict:
+            batch = tuple(b.to(self.device) for b in batch)
+        # for i, inputs in enumerate(input_ids):
+            # inputs = inputs.to(self.device)
+            inputs = {'input_ids': batch[0].to(self.device),
+                      'attention_mask': None,
+                      'labels': None
+                      }
 
             with torch.no_grad():
-                 outputs = self.model(inputs)
+                 outputs = self.model(**inputs)
 
             logits = outputs.logits
             logits = logits.detach().cpu().numpy()
-            probabilities = F.softmax(logits, dim=-1)
-            predicted_class_index = torch.argmax(probabilities, dim=-1)
-            key = list(self.label_dict)
-            predictions.append(key[predicted_class_index])
-        print(predictions)
-        return predictions
+            predictions.append(logits)
+
+        predictions = np.concatenate(predictions, axis=0)
+        predictions = torch.from_numpy(predictions)
+        probabilities = F.softmax(predictions, dim=-1)
+        predicted_class_index = torch.argmax(probabilities, dim=-1)
+        predicted_class_index = predicted_class_index.detach().cpu().numpy()
+
+        key = list(self.label_dict)
+        predictions_key = []
+        for i, index in enumerate(predicted_class_index):
+            predictions_key.append(key[index])
+
+        return predictions_key
 
     def _train(self, dataloader_train, dataloader_validation):
         for epoch in tqdm(range(1, self.epochs + 1)):
@@ -100,7 +114,7 @@ class BertClassifier:
 
                 inputs = {'input_ids': batch[0].to(self.device),
                           'attention_mask': batch[1].to(self.device),
-                          'labels': batch[2].to(self.device),
+                          'labels': batch[2].to(self.device)
                           }
                 outputs = self.model(**inputs)
 
@@ -115,7 +129,7 @@ class BertClassifier:
 
                 progress_bar.set_postfix({'training_loss': '{:.3f}'.format(loss.item() / len(batch))})
 
-            torch.save(self.model.state_dict(), f'exc/checkpoints/{self.model_type}_typefinetuned_BERT_epoch_{epoch}.pth')
+            torch.save(self.model.state_dict(), f'exc/checkpoints/{self.model_type}_finetuned_BERT_epoch_{epoch}.pth')
 
             tqdm.write(f'\nEpoch {epoch}')
 
