@@ -12,16 +12,19 @@ os.environ['CURL_CA_BUNDLE'] = ''
 
 model_name = 'bert-base-uncased'
 bert_path = ''
-model_type = "MDF2Rec"  # MDF2Rec / Desc2MDF
 
-# data = dl.Dataloader_Desc2MDF(model_name, bert_path)
+model_type = "MDF2Rec"  # MDF2Rec / Desc2MDF
 data = dl.Dataloader_MDF2Rec(model_name, bert_path)
+
+# model_type = "Desc2MDF"
+# data = dl.Dataloader_Desc2MDF(model_name, bert_path)
+
 model = BertClassifier(model_name, model_type, data)
 model._train(data.dataloader_train, data.dataloader_validation)
 
 file_path = "data/beseformDB.mdfAssetDescriptions.xlsx"
-dataloader_predict = data.predict_data(file_path)
-prediction = model._predict(dataloader_predict)
+dataloader_predict, predict_ids = data.predict_data(file_path)
+prediction = model._predict(dataloader_predict, predict_ids)
 print(prediction)
 
 print('Hello World')
