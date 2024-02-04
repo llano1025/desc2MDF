@@ -37,7 +37,7 @@ def find_latest_file(file_path, model_type):
         max_number = max(numbers)
         file_with_max_number = f'{model_type}_finetuned_BERT_epoch_{max_number}.pth'
         print(f"The file with the largest number is: {file_with_max_number}")
-        return file_with_max_number
+        return file_with_max_number, max_number
     else:
         print("No matching files found in the directory.")
-        return None
+        return None, None
