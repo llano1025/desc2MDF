@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics import f1_score
+import os
 
 
 class BertMetrics:
@@ -26,3 +27,17 @@ class BertMetrics:
             print(f'Accuracy: {len(y_preds[y_preds == label])}/{len(y_true)}\n')
 
 
+def find_latest_file(file_path, model_type):
+    file_list = os.listdir(file_path)
+    matching_files = [file for file in file_list if
+                      file.startswith(f'{model_type}_finetuned_BERT_epoch_') and file.endswith('.pth')]
+
+    if matching_files:
+        numbers = [int(file.split("_")[-1]) for file in matching_files]
+        max_number = max(numbers)
+        file_with_max_number = f'{model_type}_finetuned_BERT_epoch_{max_number}.pth'
+        print(f"The file with the largest number is: {file_with_max_number}")
+        return file_with_max_number
+    else:
+        print("No matching files found in the directory.")
+        return None

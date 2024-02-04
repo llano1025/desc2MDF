@@ -4,7 +4,7 @@ from transformers import AdamW, get_linear_schedule_with_warmup
 import random
 import numpy as np
 from tqdm import tqdm
-from utils.metrics import BertMetrics
+from utils.metrics import BertMetrics, find_latest_file
 import torch.nn.functional as F
 import pandas as pd
 
@@ -20,6 +20,7 @@ class BertClassifier:
         self.model = self.model.to(self.device)
         self.optimizer = AdamW(self.model.parameters(), lr=1e-5, eps=1e-8)
         self.epochs = 50
+        self.ft_epochs = 50
         self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
                                                          num_warmup_steps=0,
                                                          num_training_steps=len(data.dataloader_train) * self.epochs)
@@ -107,6 +108,53 @@ class BertClassifier:
 
     def _train(self, dataloader_train, dataloader_validation):
         for epoch in tqdm(range(1, self.epochs + 1)):
+
+            self.model.train()
+            loss_train_total = 0
+
+            progress_bar = tqdm(dataloader_train, desc='Epoch {:1d}'.format(epoch), leave=False, disable=False)
+            for batch in progress_bar:
+                self.model.zero_grad()
+
+                batch = tuple(b.to(self.device) for b in batch)
+
+                inputs = {'input_ids': batch[0].to(self.device),
+                          'attention_mask': batch[1].to(self.device),
+                          'labels': batch[2].to(self.device)
+                          }
+                outputs = self.model(**inputs)
+
+                loss = outputs[0]
+                loss_train_total += loss.item()
+                loss.backward()
+
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+
+                self.optimizer.step()
+                self.scheduler.step()
+
+                progress_bar.set_postfix({'training_loss': '{:.3f}'.format(loss.item() / len(batch))})
+
+            torch.save(self.model.state_dict(), f'exc/checkpoints/{self.model_type}_finetuned_BERT_epoch_{epoch}.pth')
+
+            tqdm.write(f'\nEpoch {epoch}')
+
+            loss_train_avg = loss_train_total / len(dataloader_train)
+            tqdm.write(f'Training loss: {loss_train_avg}')
+
+            val_loss, predictions, true_vals = self._evaluate(dataloader_validation)
+            score = BertMetrics(predictions, true_vals)
+            val_f1 = score.f1_score_func
+            tqdm.write(f'Validation loss: {val_loss}')
+            tqdm.write(f'F1 Score (Weighted): {val_f1}')
+
+    def _finetune(self, dataloader_train, dataloader_validation):
+        latest_file = find_latest_file('exc/checkpoints/', self.model_type)
+        model_state_dict = torch.load(f'exc/checkpoints/{latest_file}', map_location=self.device)
+
+        model = self.model
+        model.load_state_dict(model_state_dict)
+        for epoch in tqdm(range(self.epochs + 1, self.ft_epochs + 1)):
 
             self.model.train()
             loss_train_total = 0
