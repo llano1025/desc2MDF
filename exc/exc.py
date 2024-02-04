@@ -20,7 +20,7 @@ class BertClassifier:
         self.model = self.model.to(self.device)
         self.optimizer = AdamW(self.model.parameters(), lr=1e-5, eps=1e-8)
         self.epochs = 50
-        self.ft_epochs = 50
+        self.ft_epochs = 1
         self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
                                                          num_warmup_steps=0,
                                                          num_training_steps=len(data.dataloader_train) * self.epochs)
@@ -155,7 +155,7 @@ class BertClassifier:
 
             model = self.model
             model.load_state_dict(model_state_dict)
-            for epoch in tqdm(range(max_epoch + 1, self.ft_epochs + 1)):
+            for epoch in tqdm(range(max_epoch + 1, max_epoch + self.ft_epochs + 1)):
 
                 self.model.train()
                 loss_train_total = 0
