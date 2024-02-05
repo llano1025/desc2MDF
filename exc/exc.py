@@ -63,48 +63,49 @@ class BertClassifier:
         return loss_val_avg, predictions, true_vals
 
     def _predict(self, dataloader_predict, predict_ids):
-        model = BertForSequenceClassification.from_pretrained("bert-base-uncased",
-                                                              num_labels=self.num_label,
-                                                              output_attentions=False,
-                                                              output_hidden_states=False)
-        model.load_state_dict(torch.load(f'exc/checkpoints/{self.model_type}_finetuned_BERT_epoch_{self.epochs}.pth'))
-                                         # map_location=torch.device('cpu')
-        model.to(self.device)
-        self.model.eval()
-        predictions = []
+        model = self.model
+        latest_file, max_epoch = find_latest_file('exc/checkpoints/', self.model_type)
+        if latest_file is not None:
+            model_state_dict = torch.load(f'exc/checkpoints/{latest_file}', map_location=self.device)
+            model.load_state_dict(model_state_dict)
+            model.to(self.device)
+            model.eval()
+            predictions = []
 
-        for batch in dataloader_predict:
-            batch = tuple(b.to(self.device) for b in batch)
-        # for i, inputs in enumerate(input_ids):
-            # inputs = inputs.to(self.device)
-            inputs = {'input_ids': batch[0].to(self.device),
-                      'attention_mask': batch[1].to(self.device),
-                      'labels': None
-                      }
+            for batch in dataloader_predict:
+                batch = tuple(b.to(self.device) for b in batch)
+            # for i, inputs in enumerate(input_ids):
+                # inputs = inputs.to(self.device)
+                inputs = {'input_ids': batch[0].to(self.device),
+                          'attention_mask': batch[1].to(self.device),
+                          'labels': None
+                          }
 
-            with torch.no_grad():
-                 outputs = self.model(**inputs)
+                with torch.no_grad():
+                     outputs = self.model(**inputs)
 
-            logits = outputs.logits
-            logits = logits.detach().cpu().numpy()
-            predictions.append(logits)
+                logits = outputs.logits
+                logits = logits.detach().cpu().numpy()
+                predictions.append(logits)
 
-        predictions = np.concatenate(predictions, axis=0)
-        predictions = torch.from_numpy(predictions)
-        probabilities = F.softmax(predictions, dim=-1)
-        predicted_class_index = torch.argmax(probabilities, dim=-1)
-        predicted_class_index = predicted_class_index.detach().cpu().numpy()
+            predictions = np.concatenate(predictions, axis=0)
+            predictions = torch.from_numpy(predictions)
+            probabilities = F.softmax(predictions, dim=-1)
+            predicted_class_index = torch.argmax(probabilities, dim=-1)
+            predicted_class_index = predicted_class_index.detach().cpu().numpy()
 
-        key = list(self.label_dict)
-        predictions_key = []
-        for i, index in enumerate(predicted_class_index):
-            predictions_key.append(key[index])
+            key = list(self.label_dict)
+            predictions_key = []
+            for i, index in enumerate(predicted_class_index):
+                predictions_key.append(key[index])
 
-        df = pd.DataFrame(predict_ids)
-        df.columns = ["DESC"]
-        df['RECD'] = predictions_key
-        df.to_excel(f"exc/outputs/{self.model_type}_output.xlsx")
-        return df
+            df = pd.DataFrame(predict_ids)
+            df.columns = ["DESC"]
+            df['RECD'] = predictions_key
+            df.to_excel(f"exc/outputs/{self.model_type}_output.xlsx")
+            return df
+        else:
+            return None
 
     def _train(self, dataloader_train, dataloader_validation):
         for epoch in tqdm(range(1, self.epochs + 1)):
@@ -152,7 +153,6 @@ class BertClassifier:
         latest_file, max_epoch = find_latest_file('exc/checkpoints/', self.model_type)
         if latest_file is not None:
             model_state_dict = torch.load(f'exc/checkpoints/{latest_file}', map_location=self.device)
-
             model = self.model
             model.load_state_dict(model_state_dict)
             for epoch in tqdm(range(max_epoch + 1, max_epoch + self.ft_epochs + 1)):
