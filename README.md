@@ -1,10 +1,22 @@
 This project use AI to turn description to MDF group.
 
-### Start the project
+### First time start the project
 
-> pip install -r requirements.txt
+1.  Create virtual env. The 1st venv is option. The 2nd venv is we named the virtual env as ‘venv’
+    > python -m venv venv
+2.  Active the virtual venv by gitbash
+    > source venv/Scripts/activate
+3.  Install all dependency
+    > pip install -r requirements.txt
+4.  Python run main.py
 
-Python run main.py
+### Other time start the project
+
+1. Active the virtual venv by gitbash
+   > source venv/Scripts/activate
+2. Install all dependency
+   > pip install -r requirements.txt
+3. Python run main.py
 
 ### Input
 
