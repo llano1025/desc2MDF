@@ -33,7 +33,7 @@ def find_latest_file(file_path, model_type):
                       file.startswith(f'{model_type}_finetuned_BERT_epoch_') and file.endswith('.pth')]
 
     if matching_files:
-        numbers = [int(file.split("_")[-1]) for file in matching_files]
+        numbers = [int(Path(file).stem.split("_")[-1]) for file in matching_files]
         max_number = max(numbers)
         file_with_max_number = f'{model_type}_finetuned_BERT_epoch_{max_number}.pth'
         print(f"The file with the largest number is: {file_with_max_number}")
