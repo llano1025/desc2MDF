@@ -1,4 +1,4 @@
-This project use AI to turn description to MDF group.
+This project use AI to turn description to MDF group and recommended form.
 
 ## First time start the project
 
@@ -8,7 +8,9 @@ This project use AI to turn description to MDF group.
     > source venv/Scripts/activate
 3.  Install all dependency
     > pip install -r requirements.txt
-4.  Python run main.py
+4.  Data training is necessary in first run. Update following configable.<br />
+    IS_TRAIN_MODEL_NEEDED = True<br />
+5.  Python run main.py
 
 ## Everytime start the project
 
@@ -16,7 +18,9 @@ This project use AI to turn description to MDF group.
    > source venv/Scripts/activate
 2. Install all dependency
    > pip install -r requirements.txt
-3. Python run main.py
+3. Data training is optional. Update following configable.<br />
+   IS_TRAIN_MODEL_NEEDED = False<br />
+4. Python run main.py
 
 ## Input
 
@@ -41,3 +45,39 @@ This project use AI to turn description to MDF group.
 #### Desc2MDF
 
 - Output data: exc/outputs/Desc2MDF_output.xlsx
+
+## Start flask localhost server
+
+Start the flask local server
+
+> flask --app main run
+
+Example request
+
+> curl --location 'http://localhost:5000' \
+> --header 'Content-Type: application/json' \
+> --data '{"desc": "['\''ABC'\'', '\''IMPULSION PUMP, LONG'\'', '\''POWER SUPPLIER'\'']"}'
+
+Example reponse
+
+```json
+{
+  "data": [
+    {
+      "desc": "ABC",
+      "groupNo": "mm-pm-00",
+      "recommendedForm": "MDF15"
+    },
+    {
+      "desc": "IMPULSION PUMP, LONG",
+      "groupNo": "mm-pm-32",
+      "recommendedForm": "MDF01"
+    },
+    {
+      "desc": "POWER SUPPLIER",
+      "groupNo": "mm-pm-01",
+      "recommendedForm": "MDF15"
+    }
+  ]
+}
+```
