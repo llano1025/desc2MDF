@@ -10,9 +10,9 @@ os.environ['https_proxy'] = proxy
 os.environ['HTTPS_PROXY'] = proxy
 os.environ['CURL_CA_BUNDLE'] = ''
 
-MODEL_TYPE = "Desc2MDF" # MDF2Rec / Desc2MDF
-IS_TRAIN_MODEL_NEEDED = False
-IS_INPUT_BY_CSV = False
+MODEL_TYPE = "MDF2Rec" # MDF2Rec / Desc2MDF
+IS_TRAIN_MODEL_NEEDED = True
+IS_INPUT_BY_CSV = True
 INPUT_BY_TEXT = ['INFUSION PUMPS, LONGG', 'WATER PURIFICATION']
 
 model_name = 'bert-base-uncased'
