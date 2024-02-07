@@ -58,7 +58,7 @@ class Dataloader_Desc2MDF:
         return dataset_train, dataset_val, label_dict, len(possible_labels)
 
     def predict_data(self, file_path, IS_INPUT_OUTPUT_BY_CSV, INPUT):
-        if (IS_INPUT_OUTPUT_BY_CSV):
+        if (IS_INPUT_OUTPUT_BY_CSV or len(INPUT) == 0):
             # Read excel / read dataframe
             df = pd.read_excel(file_path) 
             X = df['desc'].tolist()
@@ -143,7 +143,7 @@ class Dataloader_MDF2Rec:
         return dataset_train, dataset_val, label_dict, len(possible_labels)
 
     def predict_data(self, file_path, IS_INPUT_OUTPUT_BY_CSV, INPUT):
-        if (IS_INPUT_OUTPUT_BY_CSV):
+        if (IS_INPUT_OUTPUT_BY_CSV or len(INPUT) == 0):
             # Read excel / read dataframe
             df = pd.read_excel(file_path) 
             X = df['desc'].tolist()
