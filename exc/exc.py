@@ -62,7 +62,7 @@ class BertClassifier:
 
         return loss_val_avg, predictions, true_vals
 
-    def _predict(self, dataloader_predict, predict_ids):
+    def _predict(self, dataloader_predict, predict_ids, IS_INPUT_OUTPUT_BY_CSV):
         model = self.model
         latest_file, max_epoch = find_latest_file('exc/checkpoints/', self.model_type)
         if latest_file is not None:
@@ -99,11 +99,14 @@ class BertClassifier:
             for i, index in enumerate(predicted_class_index):
                 predictions_key.append(key[index])
 
-            df = pd.DataFrame(predict_ids)
-            df.columns = ["DESC"]
-            df['RECD'] = predictions_key
-            df.to_excel(f"exc/outputs/{self.model_type}_output.xlsx")
-            return df
+            if (IS_INPUT_OUTPUT_BY_CSV):
+                df = pd.DataFrame(predict_ids)
+                df.columns = ["DESC"]
+                df['RECD'] = predictions_key
+                df.to_excel(f"exc/outputs/{self.model_type}_output.xlsx")
+                return df
+            else:
+                return predictions_key
         else:
             return None
 
