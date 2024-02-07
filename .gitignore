@@ -1,0 +1,6 @@
+/data/__pycache__/
+/exc/__pycache__/
+/exc/checkpoints/
+/models--bert-base-uncased/
+/utils/
+/venv/
