@@ -81,3 +81,14 @@ Example reponse
   ]
 }
 ```
+
+## Installation on server
+
+1.  Create virtual env. The 1st venv is option. The 2nd venv is we named the virtual env as ‘venv’
+    > python -m venv venv
+2.  Active the virtual venv by gitbash
+    > source venv/Scripts/activate
+3.  Install all dependency
+    > pip install -r requirements.txt
+4.  Start server
+    > flask --app main run
