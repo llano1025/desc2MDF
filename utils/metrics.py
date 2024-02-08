@@ -45,7 +45,7 @@ def find_latest_file(file_path, model_type):
 
 def parse_to_result(parsed_list, MDF2Rec_api_prediction, Desc2MDF_api_prediction):
     merged_array = []
-    for desc, group_no, recommended_form in zip(parsed_list, MDF2Rec_api_prediction, Desc2MDF_api_prediction):
+    for desc, group_no, recommended_form in zip(parsed_list, Desc2MDF_api_prediction, MDF2Rec_api_prediction):
         merged_array.append({
             'desc': desc,
             'groupNo': group_no,
